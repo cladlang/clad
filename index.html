@@ -5,112 +5,214 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Clad — a token-minimal language for LLM code generation</title>
 <meta name="description" content="Clad: 15% fewer tokens than Python on the real Claude tokenizer, one canonical form, contracts and self-repair errors built in. Try it in your browser.">
+<meta property="og:title" content="Clad — a token-minimal language for LLM code generation">
+<meta property="og:description" content="15% fewer tokens than Python on the real Claude tokenizer. One canonical form. Try it in your browser.">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <style>
   :root {
-    --bg: #0d1117; --panel: #161b22; --border: #2d333b;
-    --text: #c9d1d9; --dim: #8b949e; --accent: #58d3a5; --accent2: #79b8ff;
-    --err: #f97583;
+    --paper: #FBF3EA;
+    --paper-deep: #F3E8DB;
+    --ink: #211F1C;
+    --ink-soft: #6E665C;
+    --orange: #DD5F3B;
+    --orange-dark: #BC4B2A;
+    --orange-tint: #F7DECF;
+    --line: #E5D8C8;
+    --code-bg: #262320;
+    --code-text: #F4EBDF;
+    --code-dim: #9A8F82;
+    --code-orange: #F08A60;
+    --code-green: #A8C896;
   }
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
-    margin: 0; background: var(--bg); color: var(--text);
-    font: 16px/1.6 ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+    margin: 0; background: var(--paper); color: var(--ink);
+    font: 17px/1.65 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
-  .wrap { max-width: 880px; margin: 0 auto; padding: 0 20px 80px; }
-  header { padding: 64px 0 24px; }
-  h1 { font-size: 44px; margin: 0; letter-spacing: -1px; }
-  h1 .dot { color: var(--accent); }
-  .tag { color: var(--dim); margin: 8px 0 0; font-size: 18px; }
-  .nums { display: flex; gap: 28px; flex-wrap: wrap; margin: 36px 0; }
-  .num { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 20px; }
-  .num b { display: block; font-size: 26px; color: var(--accent); }
-  .num span { color: var(--dim); font-size: 13px; }
-  h2 { font-size: 20px; margin: 48px 0 12px; color: var(--accent2); }
-  pre, textarea, .out {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
-    padding: 14px 16px; font: 14px/1.55 inherit; overflow-x: auto;
+  .serif { font-family: Georgia, "Iowan Old Style", "Times New Roman", serif; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 22px; }
+  a { color: var(--orange-dark); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a:hover { color: var(--orange); }
+
+  nav {
+    display: flex; align-items: center; gap: 14px;
+    padding: 18px 0; border-bottom: 1px solid var(--line);
   }
-  textarea {
-    width: 100%; min-height: 220px; color: var(--text); resize: vertical;
-    outline: none; tab-size: 2;
+  nav .logo { height: 26px; }
+  nav .name { font-family: Georgia, serif; font-size: 22px; font-weight: bold; letter-spacing: -0.5px; }
+  nav .links { margin-left: auto; display: flex; gap: 22px; font-size: 15px; }
+  nav .links a { text-decoration: none; color: var(--ink); }
+  nav .links a:hover { color: var(--orange); }
+
+  header { padding: 72px 0 28px; }
+  header img { height: 88px; display: block; margin-bottom: 28px; }
+  h1 {
+    font-family: Georgia, "Iowan Old Style", serif;
+    font-size: clamp(34px, 6vw, 56px); line-height: 1.12;
+    margin: 0 0 18px; letter-spacing: -1.5px; font-weight: normal;
   }
-  textarea:focus { border-color: var(--accent2); }
-  .row { display: flex; gap: 10px; align-items: center; margin: 10px 0; flex-wrap: wrap; }
-  button, select {
-    background: var(--panel); color: var(--text); border: 1px solid var(--border);
-    border-radius: 6px; padding: 8px 18px; font: 14px inherit; cursor: pointer;
+  h1 em { font-style: italic; color: var(--orange); }
+  .lede { font-size: 19px; color: var(--ink-soft); max-width: 620px; margin: 0; }
+
+  .stats { display: flex; gap: 14px; flex-wrap: wrap; margin: 40px 0 8px; }
+  .stat {
+    flex: 1 1 180px; background: #fff; border: 1px solid var(--line);
+    border-radius: 10px; padding: 18px 20px;
   }
-  button.primary { border-color: var(--accent); color: var(--accent); }
-  button:hover { border-color: var(--accent2); }
-  .out { white-space: pre-wrap; min-height: 56px; margin: 0; }
-  .out.err { color: var(--err); }
-  .hint { color: var(--dim); font-size: 13px; }
-  a { color: var(--accent2); }
-  table { border-collapse: collapse; width: 100%; font-size: 14px; }
-  td, th { border: 1px solid var(--border); padding: 6px 12px; text-align: left; }
-  th { color: var(--dim); font-weight: normal; }
-  footer { margin-top: 64px; color: var(--dim); font-size: 13px; border-top: 1px solid var(--border); padding-top: 20px; }
-  .kw { color: var(--accent2); } .str { color: var(--accent); } .cm { color: var(--dim); }
+  .stat b { font-family: Georgia, serif; display: block; font-size: 34px; color: var(--orange); letter-spacing: -1px; }
+  .stat span { color: var(--ink-soft); font-size: 14px; line-height: 1.45; display: block; margin-top: 4px; }
+
+  h2 {
+    font-family: Georgia, "Iowan Old Style", serif; font-weight: normal;
+    font-size: 30px; letter-spacing: -0.5px; margin: 72px 0 14px;
+  }
+  h2::after { content: ""; display: block; width: 44px; height: 3px; background: var(--orange); margin-top: 10px; }
+  p { max-width: 680px; }
+
+  pre.code, .editor, .out {
+    background: var(--code-bg); color: var(--code-text);
+    border-radius: 10px; font: 14.5px/1.6 ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+  }
+  pre.code { padding: 18px 20px; overflow-x: auto; }
+  .kw { color: var(--code-orange); } .str { color: var(--code-green); }
+  .cm { color: var(--code-dim); font-style: italic; } .num { color: #E8C284; }
+
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0 12px; }
+  .chip {
+    background: var(--orange-tint); color: var(--orange-dark); border: 1px solid transparent;
+    border-radius: 999px; padding: 6px 14px; font-size: 13.5px; cursor: pointer; font-family: inherit;
+  }
+  .chip:hover { border-color: var(--orange); }
+  .chip.active { background: var(--orange); color: #fff; }
+
+  .editor { position: relative; }
+  .editor pre, .editor textarea {
+    margin: 0; padding: 16px 18px; font: inherit; line-height: inherit;
+    white-space: pre; word-wrap: normal; overflow: auto; tab-size: 2;
+  }
+  .editor pre { position: absolute; inset: 0; pointer-events: none; color: var(--code-text); }
+  .editor textarea {
+    position: relative; width: 100%; min-height: 230px; resize: vertical; display: block;
+    background: transparent; color: transparent; caret-color: var(--code-orange);
+    border: 1px solid transparent; border-radius: 10px; outline: none;
+  }
+  .editor textarea:focus { border-color: var(--orange); }
+  .editor textarea::selection { background: rgba(221, 95, 59, 0.35); color: transparent; }
+
+  .bar { display: flex; gap: 10px; align-items: center; margin: 14px 0; flex-wrap: wrap; }
+  button.btn {
+    font: 15px inherit; border-radius: 8px; padding: 9px 22px; cursor: pointer;
+    border: 1px solid var(--orange); background: var(--orange); color: #fff;
+  }
+  button.btn:hover { background: var(--orange-dark); border-color: var(--orange-dark); }
+  button.ghost { background: transparent; color: var(--orange-dark); }
+  button.ghost:hover { background: var(--orange-tint); color: var(--orange-dark); }
+  .hint { color: var(--ink-soft); font-size: 13.5px; }
+  .out { padding: 14px 18px; min-height: 54px; white-space: pre-wrap; }
+  .out.err { color: #F2A18A; }
+
+  .bench { margin: 22px 0; max-width: 680px; }
+  .brow { display: grid; grid-template-columns: 130px 1fr 64px; gap: 12px; align-items: center; margin: 7px 0; font-size: 14px; }
+  .brow .track { background: var(--paper-deep); border-radius: 5px; height: 16px; position: relative; }
+  .brow .fill { background: var(--orange); height: 100%; border-radius: 5px; }
+  .brow .pct { font-family: Georgia, serif; color: var(--orange-dark); text-align: right; }
+  .bench .total .fill { background: var(--ink); }
+  .bench .total .pct { color: var(--ink); font-weight: bold; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 15px; background: #fff; border-radius: 10px; overflow: hidden; }
+  td, th { border: 1px solid var(--line); padding: 9px 14px; text-align: left; }
+  th { color: var(--ink-soft); font-weight: 600; background: var(--paper-deep); }
+
+  footer { margin-top: 88px; padding: 26px 0 48px; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: 14px; }
+  footer img { height: 20px; vertical-align: -4px; margin-right: 8px; opacity: 0.85; }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <nav>
+    <img class="logo" src="assets/logo.svg" alt="">
+    <span class="name">clad</span>
+    <div class="links">
+      <a href="#playground">playground</a>
+      <a href="#why">why</a>
+      <a href="#install">install</a>
+      <a href="https://github.com/cladlang/clad">GitHub</a>
+    </div>
+  </nav>
+
   <header>
-    <h1>clad<span class="dot">.</span></h1>
-    <p class="tag">A token-minimal programming language designed for LLM code generation.<br>Claude-first, works with any model.</p>
+    <img src="assets/logo.svg" alt="Clad logo">
+    <h1>Fewer tokens. One form.<br><em>Built for models.</em></h1>
+    <p class="lede">Clad is a programming language designed for LLM code generation — every construct chosen by benchmark on the real Claude tokenizer, not by taste. Claude-first, works with any model.</p>
   </header>
 
-  <div class="nums">
-    <div class="num"><b>−15.1%</b><span>tokens vs Python, real Claude tokenizer, 35 tasks</span></div>
-    <div class="num"><b>35/35</b><span>tasks written first-try by a model that has never seen the language</span></div>
-    <div class="num"><b>1</b><span>canonical form — diffs are always semantic</span></div>
+  <div class="stats">
+    <div class="stat"><b>−15.1%</b><span>tokens vs Python over 35 tasks, measured on the real Claude tokenizer</span></div>
+    <div class="stat"><b>35/35</b><span>tasks solved first-try by a model that had never seen the language</span></div>
+    <div class="stat"><b>1</b><span>canonical form — <code>clad fmt</code> makes every diff semantic</span></div>
   </div>
 
-  <h2>// taste</h2>
-<pre><span class="kw">fn</span> fib(n:int) -> int
-  <span class="kw">expect</span> n >= 0
-  <span class="kw">if</span> n < 2: <span class="kw">ret</span> n
-  <span class="kw">ret</span> fib(n - 1) + fib(n - 2)
+  <h2 id="taste">Taste</h2>
+<pre class="code"><span class="kw">fn</span> fib(n:int) -> int
+  <span class="kw">expect</span> n >= <span class="num">0</span>
+  <span class="kw">if</span> n < <span class="num">2</span>: <span class="kw">ret</span> n
+  <span class="kw">ret</span> fib(n - <span class="num">1</span>) + fib(n - <span class="num">2</span>)
 
-range(10) |> filter(x -> x % 2 == 0) |> map(x -> x * x) |> says()</pre>
+range(<span class="num">10</span>) |> filter(x -> x % <span class="num">2</span> == <span class="num">0</span>) |> map(x -> x * x) |> says()</pre>
+  <p>No commas, no semicolons, no braces. Pipelines, contracts (<code>expect</code> / <code>ensure</code>), Python-habit operators, and a dense standard library that covers what Python needs imports for.</p>
 
-  <h2>// playground <span class="hint">— the real interpreter, running in your browser</span></h2>
-  <div class="row">
-    <select id="example"></select>
-    <button class="primary" id="runBtn" title="Ctrl+Enter">run</button>
-    <button id="fmtBtn">fmt</button>
-    <span class="hint">Ctrl+Enter to run</span>
+  <h2 id="playground">Playground</h2>
+  <p class="hint" style="margin-top:-4px">This is the real interpreter — the same code that ships in the npm package — running in your browser.</p>
+  <div class="chips" id="chips"></div>
+  <div class="editor">
+    <pre id="hl" aria-hidden="true"></pre>
+    <textarea id="code" spellcheck="false"></textarea>
   </div>
-  <textarea id="code" spellcheck="false"></textarea>
-  <div class="row"><span class="hint" id="status"></span></div>
+  <div class="bar">
+    <button class="btn" id="runBtn" title="Ctrl+Enter">Run</button>
+    <button class="btn ghost" id="fmtBtn" title="canonical form">fmt</button>
+    <button class="btn ghost" id="shareBtn">Share</button>
+    <span class="hint" id="status">Ctrl+Enter to run</span>
+  </div>
   <pre class="out" id="out"></pre>
 
-  <h2>// why fewer tokens</h2>
-  <p>No commas, no semicolons, no braces — every construct picked for minimal tokenizer cost while staying close to patterns models already know from Python. A dense stdlib (<code>freq</code>, <code>group</code>, <code>runs</code>, <code>scan</code>, <code>maxby</code>, <code>chunks</code>, …) covers what Python covers with imports and method chains. Verified by benchmark on the real Claude tokenizer, not taste — see <a href="https://github.com/cladlang/clad/tree/main/bench">bench/</a>.</p>
+  <h2 id="why">Why fewer tokens</h2>
+  <p>Generated code is paid for by the token, every time. Clad attacks the bill twice: syntax with no separator ceremony, and a standard library dense enough that common data work is one call (<code>freq</code>, <code>group</code>, <code>runs</code>, <code>scan</code>, <code>chunks</code>, <code>maxby</code>…). Token cost of the same 35 tasks, Clad vs Python, real Claude tokenizer:</p>
+  <div class="bench">
+    <div class="brow"><span>word count</span><div class="track"><div class="fill" style="width:45%"></div></div><span class="pct">−45%</span></div>
+    <div class="brow"><span>running max</span><div class="track"><div class="fill" style="width:35%"></div></div><span class="pct">−35%</span></div>
+    <div class="brow"><span>list max</span><div class="track"><div class="fill" style="width:34%"></div></div><span class="pct">−34%</span></div>
+    <div class="brow"><span>gcd</span><div class="track"><div class="fill" style="width:33%"></div></div><span class="pct">−33%</span></div>
+    <div class="brow"><span>dedupe</span><div class="track"><div class="fill" style="width:31%"></div></div><span class="pct">−31%</span></div>
+    <div class="brow"><span>flatten</span><div class="track"><div class="fill" style="width:28%"></div></div><span class="pct">−28%</span></div>
+    <div class="brow total"><span>all 35 tasks</span><div class="track"><div class="fill" style="width:15.1%"></div></div><span class="pct">−15.1%</span></div>
+  </div>
+  <p>Methodology and per-version history live in <a href="https://github.com/cladlang/clad/tree/main/bench">bench/</a> — both solutions must print identical output, Python is idiomatic and unhandicapped.</p>
 
-  <h2>// built for self-repair</h2>
-<pre>err E005 line 1 col 8
+  <h2>Built for self-repair</h2>
+<pre class="code">err E005 line 1 col 8
   expected: a space between items
   got: ','
-  fix: remove the comma — Clad separates list items, arguments and parameters with spaces</pre>
-  <p>Stable error codes, expected/got/fix fields, call-chain tracebacks. In the iterations benchmark a model fixes any mistake in exactly one round. Contracts (<code>expect</code> / <code>ensure</code>) are part of the language. <code>clad fmt</code> makes formatting a non-issue: one canonical form, enforced.</p>
+  <span class="kw">fix: remove the comma — Clad separates list items, arguments and parameters with spaces</span></pre>
+  <p>Stable error codes, <code>expected / got / fix</code> fields, call-chain tracebacks. In the iterations benchmark, a model writing Clad from the spec alone fixed every mistake in exactly one round. Formatting is never a debate: <code>clad fmt</code> rewrites to the single canonical form, <code>--check</code> guards CI.</p>
 
-  <h2>// install</h2>
-<pre>npm install -g clad-lang
+  <h2 id="install">Install</h2>
+<pre class="code">npm install -g clad-lang
 clad run hello.clad
 clad fmt --check hello.clad</pre>
 
-  <h2>// docs</h2>
+  <h2 id="docs">Docs</h2>
   <table>
     <tr><th>Language reference</th><td><a href="https://github.com/cladlang/clad/blob/main/SPEC.en.md">SPEC.en.md</a> (English) · <a href="https://github.com/cladlang/clad/blob/main/SPEC.md">SPEC.md</a> (Russian)</td></tr>
     <tr><th>Error codes</th><td><a href="https://github.com/cladlang/clad/blob/main/docs/errors.md">docs/errors.md</a></td></tr>
-    <tr><th>Benchmarks</th><td><a href="https://github.com/cladlang/clad/tree/main/bench">bench/</a> — methodology and per-version results</td></tr>
+    <tr><th>Benchmarks</th><td><a href="https://github.com/cladlang/clad/tree/main/bench">bench/</a></td></tr>
+    <tr><th>Changelog</th><td><a href="https://github.com/cladlang/clad/blob/main/CHANGELOG.md">CHANGELOG.md</a></td></tr>
     <tr><th>Source</th><td><a href="https://github.com/cladlang/clad">github.com/cladlang/clad</a> · MIT</td></tr>
   </table>
 
   <footer>
-    Clad is an independent community project, not affiliated with or endorsed by Anthropic.<br>
-    The interpreter on this page is the same code that ships in the npm package.
+    <img src="assets/logo.svg" alt="">Clad is an independent community project, not affiliated with or endorsed by Anthropic.
   </footer>
 </div>
 
@@ -123,32 +225,78 @@ clad fmt --check hello.clad</pre>
   const EXAMPLES = {
     'word frequency': 'counts = "the quick brown fox jumps over the lazy dog the end" |> split() |> freq()\nsay(counts["the"] "of" len(counts) "unique words")',
     'fizzbuzz': 'for i in range(1 16)\n  if i % 15 == 0: say("FizzBuzz")\n  elif i % 3 == 0: say("Fizz")\n  elif i % 5 == 0: say("Buzz")\n  else: say(i)',
-    'fib with contracts': 'fn fib(n:int) -> int\n  expect n >= 0\n  if n < 2: ret n\n  ret fib(n - 1) + fib(n - 2)\n\nsay(fib(20))',
+    'contracts': 'fn fib(n:int) -> int\n  expect n >= 0\n  if n < 2: ret n\n  ret fib(n - 1) + fib(n - 2)\n\nsay(fib(20))',
     'pipeline': 'range(50) |> filter(x -> x % 7 == 0) |> map(x -> x * x) |> says()',
     'group by': 'g = group(split("apple avocado banana blueberry cherry") w -> w[0])\nfor k in sort(keys(g)): say(k + ":" join(g[k] " "))',
-    'run-length encoding': 'say(join(map(runs("aaabccccd") p -> p[0] + str(p[1])) ""))',
-    'top words': '"a b c a b a d c a b" |> split() |> freq() |> pairs() |> maxby(p -> p[1]) |> says()',
-    'error self-repair demo': '-- run this to see a Clad error: every error has a stable code,\n-- a position, expected/got and a concrete fix\nxs = [1, 2 3]',
+    'run-length': 'say(join(map(runs("aaabccccd") p -> p[0] + str(p[1])) ""))',
+    'self-repair demo': '-- run me: every Clad error has a stable code,\n-- a position, expected/got and a concrete fix\nxs = [1, 2 3]',
   }
 
   const codeEl = document.getElementById('code')
+  const hlEl = document.getElementById('hl')
   const outEl = document.getElementById('out')
   const statusEl = document.getElementById('status')
-  const exampleEl = document.getElementById('example')
+  const chipsEl = document.getElementById('chips')
+
+  const KW = /\b(fn|ret|if|elif|else|for|in|while|break|continue|expect|ensure|and|or|not|true|false|nil)\b/g
+  function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;') }
+  function highlight(src) {
+    // strings and comments first, then keywords/numbers in the gaps
+    let out = ''
+    const re = /("(?:\\.|[^"\\])*"?)|(--[^\n]*)/g
+    let last = 0, m
+    const plain = s => esc(s)
+      .replace(KW, '<span class="kw">$1</span>')
+      .replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="num">$1</span>')
+    while ((m = re.exec(src))) {
+      out += plain(src.slice(last, m.index))
+      out += m[1] !== undefined ? `<span class="str">${esc(m[0])}</span>` : `<span class="cm">${esc(m[0])}</span>`
+      last = m.index + m[0].length
+    }
+    out += plain(src.slice(last))
+    return out + '\n'
+  }
+  function sync() {
+    hlEl.innerHTML = highlight(codeEl.value)
+    hlEl.scrollTop = codeEl.scrollTop
+    hlEl.scrollLeft = codeEl.scrollLeft
+  }
+  codeEl.addEventListener('input', sync)
+  codeEl.addEventListener('scroll', sync)
+
+  function setCode(src) {
+    codeEl.value = src
+    outEl.textContent = ''
+    outEl.classList.remove('err')
+    statusEl.textContent = 'Ctrl+Enter to run'
+    sync()
+  }
 
   for (const name of Object.keys(EXAMPLES)) {
-    const o = document.createElement('option')
-    o.textContent = name
-    exampleEl.append(o)
+    const b = document.createElement('button')
+    b.className = 'chip'
+    b.textContent = name
+    b.onclick = () => {
+      chipsEl.querySelectorAll('.chip').forEach(c => c.classList.remove('active'))
+      b.classList.add('active')
+      setCode(EXAMPLES[name])
+    }
+    chipsEl.append(b)
   }
-  const load = () => { codeEl.value = EXAMPLES[exampleEl.value]; outEl.textContent = ''; outEl.classList.remove('err'); statusEl.textContent = '' }
-  exampleEl.onchange = load
-  load()
+
+  // load shared code from the URL, else the first example
+  const shared = new URLSearchParams(location.hash.slice(1)).get('c')
+  if (shared) {
+    try { setCode(decodeURIComponent(escape(atob(shared.replace(/-/g, '+').replace(/_/g, '/'))))) }
+    catch { chipsEl.firstChild.click() }
+  } else {
+    chipsEl.firstChild.classList.add('active')
+    setCode(EXAMPLES[Object.keys(EXAMPLES)[0]])
+  }
 
   function exec() {
     const lines = []
     outEl.classList.remove('err')
-    statusEl.textContent = ''
     const t0 = performance.now()
     try {
       run(parse(lex(codeEl.value)), s => lines.push(s), { maxSteps: 2_000_000 })
@@ -159,29 +307,36 @@ clad fmt --check hello.clad</pre>
       lines.push(e instanceof CladError ? e.format() : `internal error: ${e.message}`)
       outEl.textContent = lines.join('\n')
       outEl.classList.add('err')
+      statusEl.textContent = ''
     }
   }
-
   function fmt() {
     try {
-      const out = format(codeEl.value.endsWith('\n') ? codeEl.value : codeEl.value + '\n')
-      codeEl.value = out
-      statusEl.textContent = 'formatted (canonical form)'
-      outEl.classList.remove('err')
+      setCode(format(codeEl.value.endsWith('\n') ? codeEl.value : codeEl.value + '\n'))
+      statusEl.textContent = 'formatted — canonical form'
     } catch (e) {
       outEl.textContent = e instanceof CladError ? e.format() : `internal error: ${e.message}`
       outEl.classList.add('err')
     }
   }
+  function share() {
+    const b64 = btoa(unescape(encodeURIComponent(codeEl.value))).replace(/\+/g, '-').replace(/\//g, '_')
+    const url = `${location.origin}${location.pathname}#c=${b64}`
+    history.replaceState(null, '', `#c=${b64}`)
+    navigator.clipboard?.writeText(url)
+    statusEl.textContent = 'link copied'
+  }
 
   document.getElementById('runBtn').onclick = exec
   document.getElementById('fmtBtn').onclick = fmt
+  document.getElementById('shareBtn').onclick = share
   codeEl.addEventListener('keydown', e => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); exec() }
     if (e.key === 'Tab') {
       e.preventDefault()
       const { selectionStart: s, selectionEnd } = codeEl
       codeEl.setRangeText('  ', s, selectionEnd, 'end')
+      sync()
     }
   })
 </script>

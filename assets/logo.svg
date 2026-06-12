@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 12">
+  <path fill="#DD5F3B" fill-rule="evenodd" d="
+    M6.5 1 H15.5 V9 H6.5 Z
+    M5.5 4 H6.5 V6.5 H5.5 Z
+    M15.5 4 H16.5 V6.5 H15.5 Z
+    M9 2.6 H10.2 V5.2 H9 Z
+    M11.8 2.6 H13 V5.2 H11.8 Z
+    M8.4 9 H10 V11 H8.4 Z
+    M12 9 H13.6 V11 H12 Z"/>
+  <polyline points="4,3.4 2.2,6 4,8.6" fill="none" stroke="#DD5F3B" stroke-width="1.15"/>
+  <polyline points="18,3.4 19.8,6 18,8.6" fill="none" stroke="#DD5F3B" stroke-width="1.15"/>
+</svg>
