@@ -1,0 +1,2 @@
+g = group(split("apple avocado banana blueberry cherry") w -> w[0])
+for k in sort(keys(g)): say(k + ":" join(g[k] " "))

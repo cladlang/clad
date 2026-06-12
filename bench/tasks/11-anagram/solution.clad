@@ -1,0 +1,4 @@
+fn ana(a b): ret "yes" if sort(a) == sort(b) else "no"
+
+say(ana("listen" "silent"))
+say(ana("hello" "world"))

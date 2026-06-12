@@ -1,0 +1,1 @@
+say(count("programming languages are fun" c -> has("aeiou" c)))

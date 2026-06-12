@@ -1,0 +1,1 @@
+say(upper(join(map(split("portable network graphics") w -> w[0]) "")))

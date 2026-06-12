@@ -1,0 +1,5 @@
+for i in range(1 31)
+  if i % 15 == 0: say("FizzBuzz")
+  elif i % 3 == 0: say("Fizz")
+  elif i % 5 == 0: say("Buzz")
+  else: say(i)

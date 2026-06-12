@@ -1,0 +1,9 @@
+-- intent: recursion with contracts
+fn fib(n:int) -> int
+  expect n >= 0
+  ensure result >= 0
+  if n < 2: ret n
+  ret fib(n - 1) + fib(n - 2)
+
+say(fib(10))
+say(fib(20))

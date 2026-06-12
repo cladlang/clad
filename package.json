@@ -1,0 +1,27 @@
+{
+  "name": "clad-lang",
+  "version": "0.6.0",
+  "description": "Clad — a token-minimal programming language designed for LLM code generation. Independent project, not affiliated with Anthropic.",
+  "type": "module",
+  "bin": {
+    "clad": "./src/cli.js"
+  },
+  "files": [
+    "src",
+    "examples",
+    "SPEC.md",
+    "README.md"
+  ],
+  "keywords": [
+    "language",
+    "interpreter",
+    "llm",
+    "ai",
+    "token-efficient"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.104.1",
+    "js-tiktoken": "^1.0.21"
+  }
+}

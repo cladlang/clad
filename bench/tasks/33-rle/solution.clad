@@ -1,0 +1,1 @@
+say(join(map(runs("aaabccccd") p -> p[0] + str(p[1])) ""))

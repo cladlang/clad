@@ -1,0 +1,6 @@
+d = 0
+for c in "(()(()))":
+    d += 1 if c == "(" else -1
+    if d < 0:
+        break
+print("yes" if d == 0 else "no")

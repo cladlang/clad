@@ -1,0 +1,1 @@
+say(sum(map(range(2 101 2) x -> x * x)))

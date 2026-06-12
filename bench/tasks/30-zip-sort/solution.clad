@@ -1,0 +1,1 @@
+for p in sort(zip(["a" "b" "c"] [3 1 2]) p -> -p[1]): says(p)

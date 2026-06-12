@@ -1,0 +1,6 @@
+-- intent: sum of squares of even numbers, pipeline style
+range(10) |> filter(x -> x % 2 == 0) |> map(x -> x * x) |> sum() |> say()
+-- intent: same data, named steps
+evens = filter(range(10) x -> x % 2 == 0)
+say(evens)
+say(fold(evens 0 (acc x) -> acc + x))

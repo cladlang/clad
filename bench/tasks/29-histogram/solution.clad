@@ -1,0 +1,2 @@
+c = freq("banana")
+for k in sort(keys(c)): say(k + ":" + str(c[k]))

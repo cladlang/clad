@@ -1,0 +1,7 @@
+-- intent: contract violation demo — exits with err E120 on the last line
+fn div(a:float b:float) -> float
+  expect b != 0
+  ret a / b
+
+say(div(10 4))
+say(div(1 0))

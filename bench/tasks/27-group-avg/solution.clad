@@ -1,0 +1,2 @@
+g = group(chunks(split("eng 100 eng 200 ops 150 ops 250 ops 200") 2) p -> p[0])
+for k in sort(keys(g)): say(k sum(map(g[k] p -> int(p[1]))) // len(g[k]))

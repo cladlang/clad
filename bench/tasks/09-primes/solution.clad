@@ -1,0 +1,9 @@
+fn is_prime(n)
+  if n < 2: ret false
+  d = 2
+  while d * d <= n
+    if n % d == 0: ret false
+    d += 1
+  ret true
+
+says(filter(range(50) is_prime))

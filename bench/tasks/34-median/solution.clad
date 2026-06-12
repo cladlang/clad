@@ -1,0 +1,2 @@
+xs = [7 1 5 9 3]
+say(sort(xs)[len(xs) // 2])

@@ -1,0 +1,1 @@
+says(maxby(pairs(freq(split("a b c a b a d c a b"))) p -> p[1]))

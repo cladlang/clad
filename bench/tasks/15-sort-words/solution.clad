@@ -1,0 +1,1 @@
+says(sort(split("banana kiwi apple fig cherry date") w -> [len(w) w]))

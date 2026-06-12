@@ -1,0 +1,8 @@
+-- intent: count words with a map
+words = split("clad is law and law is clad" " ")
+counts = {}
+for w in words
+  if has(counts w): counts[w] += 1
+  else: counts[w] = 1
+say(counts)
+say(len(words) "words" len(keys(counts)) "unique")

@@ -1,0 +1,2 @@
+s = replace("never odd or even" " " "")
+say("yes" if s == rev(s) else "no")

@@ -1,0 +1,1 @@
+say(sum(map(str(2 ** 40) int)))

@@ -1,0 +1,1 @@
+says(slice(rev(sort([17 4 42 9 23 8 15])) 0 3))

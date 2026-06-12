@@ -1,0 +1,3 @@
+counts = freq(split("the quick brown fox jumps over the lazy dog the end"))
+say(counts["the"])
+say(len(counts))

@@ -1,0 +1,7 @@
+fn two_sum(xs target)
+  for i in range(len(xs))
+    for j in range(i + 1 len(xs))
+      if xs[i] + xs[j] == target: ret [i j]
+  ret []
+
+says(two_sum([2 7 11 15] 26))
