@@ -87,6 +87,7 @@ export function fmt(v) {
 export function run(ast, out = s => console.log(s)) {
   const g = new Env()
   installBuiltins(g, out)
+  depth = 0
   try {
     execBlock(ast.body, g, null)
   } catch (e) {
@@ -312,6 +313,9 @@ function evalBinop(s, env) {
   }
 }
 
+const MAX_DEPTH = 500 // keeps clad recursion errors ahead of the JS stack limit
+let depth = 0
+
 export function callFunction(f, args, node) {
   if (f && f.builtin === true) return f.fn(args, node)
   if (!(f && f.clad === true))
@@ -319,29 +323,44 @@ export function callFunction(f, args, node) {
   const d = f.decl
   if (args.length !== d.params.length)
     throw new CladError('E104', node.line, node.col, { expected: `${d.params.length} argument(s) for ${d.name ?? 'fn'}`, got: `${args.length}`, fix: 'match the parameter list' })
-  const env = new Env(f.env)
-  d.params.forEach((p, i) => {
-    if (p.type) checkType(args[i], p.type, node, `parameter '${p.name}'`)
-    env.define(p.name, args[i])
-  })
-  const ctx = { ensures: [] }
-  let result = null
+  if (++depth > MAX_DEPTH) {
+    depth--
+    throw new CladError('E115', node.line, node.col, { expected: `call depth <= ${MAX_DEPTH}`, got: 'deeper recursion', fix: 'add or fix the base case of the recursive function' })
+  }
   try {
-    execBlock(d.body, env, ctx)
+    const env = new Env(f.env)
+    d.params.forEach((p, i) => {
+      if (p.type) checkType(args[i], p.type, node, `parameter '${p.name}'`)
+      env.define(p.name, args[i])
+    })
+    const ctx = { ensures: [] }
+    let result = null
+    try {
+      execBlock(d.body, env, ctx)
+    } catch (e) {
+      if (e instanceof Ret) result = e.value
+      else if (e instanceof LoopSig) throw e.toError()
+      else throw e
+    }
+    if (d.retType) checkType(result, d.retType, node, `return value of ${d.name ?? 'fn'}`)
+    for (const en of ctx.ensures) {
+      const ee = new Env(en.env)
+      ee.define('result', result)
+      const v = evalExpr(en.expr, ee)
+      mustBool(v, en, 'ensure')
+      if (!v) throw new CladError('E121', en.line, en.col, { contract: 'ensure', got: 'false', fix: 'fix the function body so the postcondition holds' })
+    }
+    return result
   } catch (e) {
-    if (e instanceof Ret) result = e.value
-    else if (e instanceof LoopSig) throw e.toError()
-    else throw e
+    // call-chain trace for self-repair: which calls led to the error
+    if (e instanceof CladError) {
+      e.trace = e.trace ?? []
+      if (e.trace.length < 8) e.trace.push(`${d.name ?? '<lambda>'} (called at line ${node.line} col ${node.col})`)
+    }
+    throw e
+  } finally {
+    depth--
   }
-  if (d.retType) checkType(result, d.retType, node, `return value of ${d.name ?? 'fn'}`)
-  for (const en of ctx.ensures) {
-    const ee = new Env(en.env)
-    ee.define('result', result)
-    const v = evalExpr(en.expr, ee)
-    mustBool(v, en, 'ensure')
-    if (!v) throw new CladError('E121', en.line, en.col, { contract: 'ensure', got: 'false', fix: 'fix the function body so the postcondition holds' })
-  }
-  return result
 }
 
 function installBuiltins(g, out) {

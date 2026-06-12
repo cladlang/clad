@@ -6,6 +6,12 @@ import { run } from './interp.js'
 import { format } from './fmt.js'
 
 const args = process.argv.slice(2)
+
+if (args.includes('--version') || args[0] === 'version') {
+  const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+  console.log(`clad v${pkg.version}`)
+  process.exit(0)
+}
 const cmd = args[0]
 const check = args.includes('--check')
 const files = args.slice(1).filter(a => !a.startsWith('--'))
@@ -25,9 +31,10 @@ if (cmd === 'run' && files.length === 1) {
   } catch (e) {
     if (e instanceof CladError) {
       console.error(e.format())
-      process.exit(1)
+    } else {
+      console.error(`err E999 internal error\n  got: ${e.message}\n  fix: report this at https://github.com/cladlang/clad/issues`)
     }
-    throw e
+    process.exit(1)
   }
 } else if (cmd === 'fmt' && files.length > 0) {
   let dirty = 0
@@ -54,6 +61,6 @@ if (cmd === 'run' && files.length === 1) {
   }
   if (check && dirty) process.exit(1)
 } else {
-  console.log('clad — usage: clad run <file.clad> | clad fmt [--check] <files...>')
+  console.log('clad — usage: clad run <file.clad> | clad fmt [--check] <files...> | clad --version')
   process.exit(cmd ? 1 : 0)
 }

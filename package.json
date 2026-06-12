@@ -1,15 +1,27 @@
 {
   "name": "clad-lang",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Clad — a token-minimal programming language designed for LLM code generation. Independent project, not affiliated with Anthropic.",
   "type": "module",
   "bin": {
     "clad": "./src/cli.js"
   },
+  "scripts": {
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cladlang/clad.git"
+  },
+  "author": "cladlang",
+  "engines": {
+    "node": ">=20"
+  },
   "files": [
     "src",
     "examples",
     "SPEC.md",
+    "docs",
     "README.md"
   ],
   "keywords": [

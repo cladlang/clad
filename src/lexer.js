@@ -11,6 +11,7 @@ export class CladError extends Error {
   format() {
     let out = `err ${this.code} line ${this.line} col ${this.col}`
     for (const [k, v] of Object.entries(this.fields)) out += `\n  ${k}: ${v}`
+    if (this.trace) for (const frame of this.trace) out += `\n  in ${frame}`
     return out
   }
 }
