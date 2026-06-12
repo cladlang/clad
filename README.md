@@ -1,6 +1,12 @@
 # Clad
 
+[![ci](https://github.com/cladlang/clad/actions/workflows/ci.yml/badge.svg)](https://github.com/cladlang/clad/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/clad-lang)](https://www.npmjs.com/package/clad-lang)
+[![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 A token-minimal programming language designed for LLM code generation (Claude-first, works with any model).
+
+**Try it in your browser: [cladlang.github.io/clad](https://cladlang.github.io/clad/)** — the site runs the real interpreter.
 
 > Clad is an independent community project, not affiliated with or endorsed by Anthropic.
 

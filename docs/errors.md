@@ -40,6 +40,7 @@ Every error has a stable code, a `line`/`col` position, `expected`/`got` fields 
 | E113 | Wrong argument type for a builtin |
 | E114 | `break`/`continue` outside a loop |
 | E115 | Recursion depth over 500 |
+| E116 | Step limit exceeded (only when the host sets `maxSteps`, e.g. the web playground) |
 
 ## Contracts (E12x)
 

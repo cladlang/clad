@@ -84,10 +84,14 @@ export function fmt(v) {
   return String(v)
 }
 
-export function run(ast, out = s => console.log(s)) {
+// opts.maxSteps bounds executed statements (for embedding, e.g. the web
+// playground); 0 = unlimited (the CLI default)
+export function run(ast, out = s => console.log(s), opts = {}) {
   const g = new Env()
   installBuiltins(g, out)
   depth = 0
+  steps = 0
+  maxSteps = opts.maxSteps ?? 0
   try {
     execBlock(ast.body, g, null)
   } catch (e) {
@@ -95,11 +99,16 @@ export function run(ast, out = s => console.log(s)) {
   }
 }
 
+let steps = 0
+let maxSteps = 0
+
 function execBlock(stmts, env, fnCtx) {
   for (const s of stmts) exec(s, env, fnCtx)
 }
 
 function exec(s, env, fnCtx) {
+  if (maxSteps && ++steps > maxSteps)
+    throw new CladError('E116', s.line ?? 0, s.col ?? 0, { expected: `at most ${maxSteps} executed statements`, got: 'a longer run', fix: 'check for an infinite loop or reduce the workload' })
   switch (s.kind) {
     case 'fn':
       env.define(s.name, { clad: true, decl: s, env })

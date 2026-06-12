@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clad — a token-minimal language for LLM code generation</title>
+<meta name="description" content="Clad: 15% fewer tokens than Python on the real Claude tokenizer, one canonical form, contracts and self-repair errors built in. Try it in your browser.">
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #2d333b;
+    --text: #c9d1d9; --dim: #8b949e; --accent: #58d3a5; --accent2: #79b8ff;
+    --err: #f97583;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 20px 80px; }
+  header { padding: 64px 0 24px; }
+  h1 { font-size: 44px; margin: 0; letter-spacing: -1px; }
+  h1 .dot { color: var(--accent); }
+  .tag { color: var(--dim); margin: 8px 0 0; font-size: 18px; }
+  .nums { display: flex; gap: 28px; flex-wrap: wrap; margin: 36px 0; }
+  .num { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 20px; }
+  .num b { display: block; font-size: 26px; color: var(--accent); }
+  .num span { color: var(--dim); font-size: 13px; }
+  h2 { font-size: 20px; margin: 48px 0 12px; color: var(--accent2); }
+  pre, textarea, .out {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; font: 14px/1.55 inherit; overflow-x: auto;
+  }
+  textarea {
+    width: 100%; min-height: 220px; color: var(--text); resize: vertical;
+    outline: none; tab-size: 2;
+  }
+  textarea:focus { border-color: var(--accent2); }
+  .row { display: flex; gap: 10px; align-items: center; margin: 10px 0; flex-wrap: wrap; }
+  button, select {
+    background: var(--panel); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 18px; font: 14px inherit; cursor: pointer;
+  }
+  button.primary { border-color: var(--accent); color: var(--accent); }
+  button:hover { border-color: var(--accent2); }
+  .out { white-space: pre-wrap; min-height: 56px; margin: 0; }
+  .out.err { color: var(--err); }
+  .hint { color: var(--dim); font-size: 13px; }
+  a { color: var(--accent2); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  td, th { border: 1px solid var(--border); padding: 6px 12px; text-align: left; }
+  th { color: var(--dim); font-weight: normal; }
+  footer { margin-top: 64px; color: var(--dim); font-size: 13px; border-top: 1px solid var(--border); padding-top: 20px; }
+  .kw { color: var(--accent2); } .str { color: var(--accent); } .cm { color: var(--dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>clad<span class="dot">.</span></h1>
+    <p class="tag">A token-minimal programming language designed for LLM code generation.<br>Claude-first, works with any model.</p>
+  </header>
+
+  <div class="nums">
+    <div class="num"><b>−15.1%</b><span>tokens vs Python, real Claude tokenizer, 35 tasks</span></div>
+    <div class="num"><b>35/35</b><span>tasks written first-try by a model that has never seen the language</span></div>
+    <div class="num"><b>1</b><span>canonical form — diffs are always semantic</span></div>
+  </div>
+
+  <h2>// taste</h2>
+<pre><span class="kw">fn</span> fib(n:int) -> int
+  <span class="kw">expect</span> n >= 0
+  <span class="kw">if</span> n < 2: <span class="kw">ret</span> n
+  <span class="kw">ret</span> fib(n - 1) + fib(n - 2)
+
+range(10) |> filter(x -> x % 2 == 0) |> map(x -> x * x) |> says()</pre>
+
+  <h2>// playground <span class="hint">— the real interpreter, running in your browser</span></h2>
+  <div class="row">
+    <select id="example"></select>
+    <button class="primary" id="runBtn" title="Ctrl+Enter">run</button>
+    <button id="fmtBtn">fmt</button>
+    <span class="hint">Ctrl+Enter to run</span>
+  </div>
+  <textarea id="code" spellcheck="false"></textarea>
+  <div class="row"><span class="hint" id="status"></span></div>
+  <pre class="out" id="out"></pre>
+
+  <h2>// why fewer tokens</h2>
+  <p>No commas, no semicolons, no braces — every construct picked for minimal tokenizer cost while staying close to patterns models already know from Python. A dense stdlib (<code>freq</code>, <code>group</code>, <code>runs</code>, <code>scan</code>, <code>maxby</code>, <code>chunks</code>, …) covers what Python covers with imports and method chains. Verified by benchmark on the real Claude tokenizer, not taste — see <a href="https://github.com/cladlang/clad/tree/main/bench">bench/</a>.</p>
+
+  <h2>// built for self-repair</h2>
+<pre>err E005 line 1 col 8
+  expected: a space between items
+  got: ','
+  fix: remove the comma — Clad separates list items, arguments and parameters with spaces</pre>
+  <p>Stable error codes, expected/got/fix fields, call-chain tracebacks. In the iterations benchmark a model fixes any mistake in exactly one round. Contracts (<code>expect</code> / <code>ensure</code>) are part of the language. <code>clad fmt</code> makes formatting a non-issue: one canonical form, enforced.</p>
+
+  <h2>// install</h2>
+<pre>npm install -g clad-lang
+clad run hello.clad
+clad fmt --check hello.clad</pre>
+
+  <h2>// docs</h2>
+  <table>
+    <tr><th>Language reference</th><td><a href="https://github.com/cladlang/clad/blob/main/SPEC.en.md">SPEC.en.md</a> (English) · <a href="https://github.com/cladlang/clad/blob/main/SPEC.md">SPEC.md</a> (Russian)</td></tr>
+    <tr><th>Error codes</th><td><a href="https://github.com/cladlang/clad/blob/main/docs/errors.md">docs/errors.md</a></td></tr>
+    <tr><th>Benchmarks</th><td><a href="https://github.com/cladlang/clad/tree/main/bench">bench/</a> — methodology and per-version results</td></tr>
+    <tr><th>Source</th><td><a href="https://github.com/cladlang/clad">github.com/cladlang/clad</a> · MIT</td></tr>
+  </table>
+
+  <footer>
+    Clad is an independent community project, not affiliated with or endorsed by Anthropic.<br>
+    The interpreter on this page is the same code that ships in the npm package.
+  </footer>
+</div>
+
+<script type="module">
+  import { lex, CladError } from './src/lexer.js'
+  import { parse } from './src/parser.js'
+  import { run } from './src/interp.js'
+  import { format } from './src/fmt.js'
+
+  const EXAMPLES = {
+    'word frequency': 'counts = "the quick brown fox jumps over the lazy dog the end" |> split() |> freq()\nsay(counts["the"] "of" len(counts) "unique words")',
+    'fizzbuzz': 'for i in range(1 16)\n  if i % 15 == 0: say("FizzBuzz")\n  elif i % 3 == 0: say("Fizz")\n  elif i % 5 == 0: say("Buzz")\n  else: say(i)',
+    'fib with contracts': 'fn fib(n:int) -> int\n  expect n >= 0\n  if n < 2: ret n\n  ret fib(n - 1) + fib(n - 2)\n\nsay(fib(20))',
+    'pipeline': 'range(50) |> filter(x -> x % 7 == 0) |> map(x -> x * x) |> says()',
+    'group by': 'g = group(split("apple avocado banana blueberry cherry") w -> w[0])\nfor k in sort(keys(g)): say(k + ":" join(g[k] " "))',
+    'run-length encoding': 'say(join(map(runs("aaabccccd") p -> p[0] + str(p[1])) ""))',
+    'top words': '"a b c a b a d c a b" |> split() |> freq() |> pairs() |> maxby(p -> p[1]) |> says()',
+    'error self-repair demo': '-- run this to see a Clad error: every error has a stable code,\n-- a position, expected/got and a concrete fix\nxs = [1, 2 3]',
+  }
+
+  const codeEl = document.getElementById('code')
+  const outEl = document.getElementById('out')
+  const statusEl = document.getElementById('status')
+  const exampleEl = document.getElementById('example')
+
+  for (const name of Object.keys(EXAMPLES)) {
+    const o = document.createElement('option')
+    o.textContent = name
+    exampleEl.append(o)
+  }
+  const load = () => { codeEl.value = EXAMPLES[exampleEl.value]; outEl.textContent = ''; outEl.classList.remove('err'); statusEl.textContent = '' }
+  exampleEl.onchange = load
+  load()
+
+  function exec() {
+    const lines = []
+    outEl.classList.remove('err')
+    statusEl.textContent = ''
+    const t0 = performance.now()
+    try {
+      run(parse(lex(codeEl.value)), s => lines.push(s), { maxSteps: 2_000_000 })
+      outEl.textContent = lines.join('\n') || '(no output)'
+      statusEl.textContent = `ok · ${(performance.now() - t0).toFixed(1)} ms`
+    } catch (e) {
+      if (lines.length) lines.push('')
+      lines.push(e instanceof CladError ? e.format() : `internal error: ${e.message}`)
+      outEl.textContent = lines.join('\n')
+      outEl.classList.add('err')
+    }
+  }
+
+  function fmt() {
+    try {
+      const out = format(codeEl.value.endsWith('\n') ? codeEl.value : codeEl.value + '\n')
+      codeEl.value = out
+      statusEl.textContent = 'formatted (canonical form)'
+      outEl.classList.remove('err')
+    } catch (e) {
+      outEl.textContent = e instanceof CladError ? e.format() : `internal error: ${e.message}`
+      outEl.classList.add('err')
+    }
+  }
+
+  document.getElementById('runBtn').onclick = exec
+  document.getElementById('fmtBtn').onclick = fmt
+  codeEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); exec() }
+    if (e.key === 'Tab') {
+      e.preventDefault()
+      const { selectionStart: s, selectionEnd } = codeEl
+      codeEl.setRangeText('  ', s, selectionEnd, 'end')
+    }
+  })
+</script>
+</body>
+</html>
