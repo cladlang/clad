@@ -206,7 +206,7 @@ clad fmt --check hello.clad</pre>
 
   <h2 id="docs">Docs</h2>
   <table>
-    <tr><th>Language reference</th><td><a href="https://github.com/cladlang/clad/blob/main/SPEC.en.md">SPEC.en.md</a> (English) · <a href="https://github.com/cladlang/clad/blob/main/SPEC.md">SPEC.md</a> (Russian)</td></tr>
+    <tr><th>Language reference</th><td><a href="https://github.com/cladlang/clad/blob/main/SPEC.md">SPEC.md</a></td></tr>
     <tr><th>Error codes</th><td><a href="https://github.com/cladlang/clad/blob/main/docs/errors.md">docs/errors.md</a></td></tr>
     <tr><th>Benchmarks</th><td><a href="https://github.com/cladlang/clad/tree/main/bench">bench/</a></td></tr>
     <tr><th>Changelog</th><td><a href="https://github.com/cladlang/clad/blob/main/CHANGELOG.md">CHANGELOG.md</a></td></tr>
@@ -317,7 +317,13 @@ clad fmt --check hello.clad</pre>
   }
   function fmt() {
     try {
-      setCode(format(codeEl.value.endsWith('\n') ? codeEl.value : codeEl.value + '\n'))
+      const src = codeEl.value.endsWith('\n') ? codeEl.value : codeEl.value + '\n'
+      const canon = format(src)
+      if (canon === src) {
+        statusEl.textContent = 'already canonical — nothing to change'
+        return
+      }
+      setCode(canon)
       statusEl.textContent = 'formatted — canonical form'
     } catch (e) {
       outEl.textContent = e instanceof CladError ? e.format() : `internal error: ${e.message}`

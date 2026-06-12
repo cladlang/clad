@@ -1,50 +1,51 @@
-# Clad — спецификация языка v0.6
+# Clad — language specification v0.7
 
 > Clad is an independent community project, not affiliated with or endorsed by Anthropic.
 
-Язык программирования, оптимизированный под генерацию кода LLM (в первую очередь Claude): минимум токенов на конструкцию, одна каноническая форма записи, контракты в синтаксисе, сообщения об ошибках, рассчитанные на починку моделью за одну итерацию.
+A programming language optimized for LLM code generation (Claude-first): minimal tokens per construct, exactly one canonical form, contracts in the syntax, and error messages designed to be fixed by a model in a single iteration.
 
-Расширение файлов: `.clad`. CLI: `clad run file.clad`, `clad fmt file.clad`.
+File extension: `.clad`. CLI: `clad run file.clad`, `clad fmt [--check] file.clad`.
 
-## Принципы дизайна
+## Design principles
 
-1. **Токен-экономия с поправкой на привычность.** Конструкция выбирается не просто самая короткая, а самая дешёвая из тех, что близки к паттернам, которые модель уже хорошо знает по Python/JS. Экзотика экономит токены, но повышает частоту ошибок генерации — это проверяется бенчмарком, а не вкусом.
-2. **Одна каноническая форма.** На каждую конструкцию ровно один способ записи и одно форматирование. `clad fmt` — тождественная функция на валидном коде. Диффы всегда семантические.
-3. **Контракты — часть языка.** `expect` (предусловие) и `ensure` (постусловие) — рантайм-проверки в v0.1, с прицелом на статическую проверку позже.
-4. **Ошибки для LLM.** Каждая ошибка: стабильный код, позиция, что ожидалось / что получено, и конкретная подсказка исправления.
+1. **Token economy weighted by familiarity.** Each construct is the cheapest one that stays close to patterns models already know from Python/JS. Exotic syntax saves tokens but raises generation error rates — this is verified by benchmark, not taste.
+2. **One canonical form.** Exactly one way to write and format every construct. `clad fmt` is the identity function on canonical code; diffs are always semantic.
+3. **Contracts are part of the language.** `expect` (precondition) and `ensure` (postcondition) are runtime checks in v0.x, with static checking planned.
+4. **Errors built for LLMs.** Every error has a stable code, a position, expected/got fields, and a concrete fix hint. See [docs/errors.md](docs/errors.md).
 
-## Лексика
+## Lexical structure
 
-- Отступы значимы (2 пробела, табы запрещены). Конец строки завершает инструкцию; точек с запятой и запятых в языке нет — элементы списков, аргументы и параметры разделяются пробелами.
-- Комментарий и блок намерения: `-- текст` до конца строки. Других форм комментариев нет.
-- Идентификаторы: `[a-z][a-z0-9_]*` (snake_case; camelCase запрещён форматтером — одна каноническая форма).
-- Вызов всегда со скобками вплотную к имени: `say(x)`. Индексация вплотную: `xs[0]`.
+- Indentation is significant (2 spaces; tabs are an error). End of line ends a statement; there are no semicolons and no commas — list items, call arguments and parameters are separated by spaces.
+- Comment: `-- text` to end of line. No other comment forms.
+- Identifiers: `[a-z][a-z0-9_]*` (snake_case).
+- Calls have the parenthesis attached to the name: `say(x)`. Indexing is attached too: `xs[0]`.
+- A leading UTF-8 BOM is tolerated.
 
-## Типы данных v0.1
+## Data types
 
-`int`, `float`, `str`, `bool`, `list`, `map`, `fn`, `nil`. Динамическая типизация; аннотации опциональны и проверяются в рантайме: `fn add(a:int b:int) -> int`.
+`int`, `float`, `str`, `bool`, `list`, `map`, `fn`, `nil`. Dynamic typing; annotations are optional and checked at runtime: `fn add(a:int b:int) -> int`.
 
-Литералы:
+Literals:
 
 ```
 n = 42
-s = "hi"
+s = "hi"            -- escapes: \n \t \" \\
 ok = true
-xs = [1 2 3]          -- список: разделитель — пробел, без запятых
-m = {a:1 b:2}         -- мапа; чтение: m["a"]
+xs = [1 2 3]        -- list: space-separated, no commas
+m = {a:1 b:2}       -- map; read with m["a"]; keys are strings
 nothing = nil
 ```
 
-## Операторы
+## Operators
 
-- Арифметика: `+ - * / % // **` (`//` — целочисленное деление с округлением вниз, `**` — степень, правоассоциативна).
-- Сравнения: `== != < <= > >=`; `==` сравнивает списки и мапы по содержимому (глубоко). Логика: `and or not`.
-- `+` соединяет два списка или две строки.
-- Присваивание с операцией: `x += 1`, также `-= *= /= %=`.
-- Условное выражение (как в Python): `a if cond else b`.
-- Индексация: `xs[0]`, `s[2]`; отрицательный индекс — с конца: `xs[-1]` — последний элемент.
+- Arithmetic: `+ - * / % // **` (`//` floor division, `**` power, right-associative).
+- Comparisons: `== != < <= > >=`; `==` compares lists and maps by value (deep). Logic: `and or not`.
+- `+` concatenates two lists or two strings.
+- Augmented assignment: `x += 1`, also `-= *= /= %=`.
+- Conditional expression (as in Python): `a if cond else b`.
+- Indexing: `xs[0]`, `s[2]`; negative indexes count from the end: `xs[-1]` is the last element.
 
-## Функции
+## Functions
 
 ```
 fn fib(n:int) -> int
@@ -53,85 +54,83 @@ fn fib(n:int) -> int
   ret fib(n - 1) + fib(n - 2)
 ```
 
-- Параметры без запятых: `fn f(a b c)`.
-- `ret` возвращает значение; функция без `ret` возвращает `nil`.
-- Однострочное тело после `:`; многострочное — отступом.
-- Лямбда: `x -> x * x`; несколько параметров: `(a b) -> a + b`.
+- Parameters without commas: `fn f(a b c)`.
+- `ret` returns a value; a function without `ret` returns `nil`.
+- One-line body after `:`; multi-line body by indentation.
+- Lambda: `x -> x * x`; several parameters: `(a b) -> a + b`.
 
-## Контракты
+## Contracts
 
 ```
 fn div(a:float b:float) -> float
-  expect b != 0          -- проверяется в момент выполнения строки
+  expect b != 0
   ensure result >= 0 or a < 0
   ret a / b
 ```
 
-`result` — зарезервированное имя возвращаемого значения внутри `ensure`; все `ensure` функции проверяются при возврате. Нарушение контракта — ошибка E120/E121 с позицией контракта.
+`result` is the reserved name of the return value inside `ensure`; all `ensure` clauses are checked on return. A violated contract is error E120/E121 at the contract's position.
 
-## Управление
+## Control flow
 
 ```
 if x > 0: say("pos")
 elif x < 0: say("neg")
 else: say("zero")
 
-for x in xs        -- список или строка (по символам)
+for x in xs        -- a list or a string (over characters)
   say(x)
 
 while n > 0
   n -= 1
 ```
 
-Условие обязано быть `bool` — неявной truthiness нет (E110). Внутри циклов работают `break` и `continue`.
+Conditions must be `bool` — there is no implicit truthiness (E110). `break` and `continue` work inside loops.
 
-## Конвейер
+## Pipeline
 
-`|>` передаёт значение первым аргументом следующего вызова:
+`|>` passes the value as the first argument of the next call:
 
 ```
 xs |> filter(x -> x % 2 == 0) |> map(x -> x * x) |> sum() |> say()
 ```
 
-## Стандартная библиотека
+## Standard library
 
-`say` (печать аргументов через пробел), `says` (печать элементов списка через пробел: `xs |> says()`), `len`, `push`, `map`, `filter`, `fold`, `scan`, `count`, `range`, `keys`, `vals`, `pairs`, `has`, `idx`, `slice`, `rev`, `uniq`, `freq`, `group`, `sort`, `maxby`, `minby`, `flat`, `join`, `split`, `replace`, `lines`, `lower`, `upper`, `cap` (первая буква — заглавная), `title` (каждое слово с заглавной), `str`, `int`, `float`, `abs`, `min`, `max`, `sum`, `gcd`, `ord`, `chr`, `zip`, `runs`, `chunks`.
+`say` (prints arguments space-separated), `says` (prints list elements space-separated: `xs |> says()`), `len`, `push`, `map`, `filter`, `fold`, `scan`, `count`, `range`, `keys`, `vals`, `pairs`, `has`, `idx`, `slice`, `rev`, `uniq`, `freq`, `group`, `sort`, `maxby`, `minby`, `flat`, `join`, `split`, `replace`, `lines`, `lower`, `upper`, `cap` (capitalize first letter), `title` (capitalize every word), `str`, `int`, `float`, `abs`, `min`, `max`, `sum`, `gcd`, `ord`, `chr`, `zip`, `runs`, `chunks`.
 
-Сигнатуры неочевидных:
+Signatures of the non-obvious ones:
 
-- `range(n)` / `range(a b)` / `range(a b step)` — step может быть отрицательным.
-- `count(xs f)` — число элементов, для которых `f` даёт `true`.
-- `freq(xs)` — мапа частот строковых элементов: `split(s " ") |> freq()`.
-- `sort(xs)` / `sort(xs f)` — стабильная сортировка по возрастанию; `f` — ключ: число, строка или список (сравнивается лексикографически): `sort(ws w -> [len(w) w])`.
-- `split(s)` — по пробельным символам (как в Python); `split(s sep)` — по разделителю.
-- `idx(xs v)` — первый индекс значения (для строки — подстроки), `-1` если нет.
-- `slice(xs a b)` — подсписок/подстрока `[a, b)`; отрицательные индексы — с конца.
-- `uniq(xs)` — без дубликатов, порядок первых вхождений.
-- `pairs(m)` — список пар `[ключ значение]`.
-- `has(c k)` — ключ мапы / элемент списка / подстрока. `replace(s a b)` — замена всех вхождений.
-- `min` / `max` — пара чисел или список. `ord(c)` / `chr(n)` — код символа и обратно.
-- `float(x)` — число или числовая строка в число. `zip(a b)` — список пар `[a[i] b[i]]` по длине короткого.
-- `lines(s)` — разбить по `\n`. `runs(xs)` — серии равных соседних элементов как пары `[значение длина]`: `runs("aab")` → `[[a 2] [b 1]]`.
-- `chunks(xs n)` — нарезать на куски по n: `chunks([1 2 3 4] 2)` → `[[1 2] [3 4]]`.
-- `scan(xs init f)` — как `fold`, но возвращает список всех промежуточных значений.
-- `maxby(xs f)` / `minby(xs f)` — элемент с наибольшим/наименьшим ключом `f` (при равенстве — первый).
-- `group(xs f)` — мапа «ключ → список элементов с этим ключом»: `group(ws w -> w[0])`.
-- `flat(xs)` — разворачивает список списков на один уровень.
-- `join(xs sep)` — нестроковые элементы приводятся к строке автоматически: `join([1 2] " ")` → `"1 2"`.
+- `range(n)` / `range(a b)` / `range(a b step)` — step may be negative.
+- `count(xs f)` — number of elements where `f` is `true`.
+- `freq(xs)` — frequency map of string elements: `split(s) |> freq()`.
+- `sort(xs)` / `sort(xs f)` — stable ascending sort; `f` is a key: number, string, or list (compared lexicographically): `sort(ws w -> [len(w) w])`.
+- `split(s)` — on whitespace (as in Python); `split(s sep)` — on a separator.
+- `idx(xs v)` — first index of a value (substring for strings), `-1` if absent.
+- `slice(xs a b)` — sublist/substring `[a, b)`; negative indexes count from the end.
+- `uniq(xs)` — duplicates removed, first-occurrence order.
+- `pairs(m)` — list of `[key value]` pairs.
+- `has(c k)` — map key / list element / substring. `replace(s a b)` — replace all occurrences.
+- `min` / `max` — a pair of numbers or a list. `ord(c)` / `chr(n)` — character code and back.
+- `scan(xs init f)` — like `fold`, but returns the list of all intermediate values.
+- `maxby(xs f)` / `minby(xs f)` — element with the largest/smallest key `f` (first on ties).
+- `group(xs f)` — map from key to the list of elements with that key: `group(ws w -> w[0])`.
+- `flat(xs)` — flattens a list of lists by one level.
+- `join(xs sep)` — non-string elements are stringified automatically: `join([1 2] " ")` → `"1 2"`.
+- `float(x)` — number or numeric string to a number. `zip(a b)` — list of `[a[i] b[i]]` pairs up to the shorter length.
+- `lines(s)` — split on `\n`. `runs(xs)` — runs of equal adjacent elements as `[value count]` pairs: `runs("aab")` → `[[a 2] [b 1]]`.
+- `chunks(xs n)` — split into chunks of n: `chunks([1 2 3 4] 2)` → `[[1 2] [3 4]]`.
 
-`map`, `filter`, `fold`, `count`, `sort`, `uniq`, `freq` принимают список или строку (строка — как список её символов; результат всегда список): `"text" |> count(c -> has("aeiou" c))`.
+`map`, `filter`, `fold`, `count`, `sort`, `uniq`, `freq` accept a list or a string (a string acts as the list of its characters; the result is always a list): `"text" |> count(c -> has("aeiou" c))`.
 
-Принцип: плотная стдлиба — главный рычаг токен-экономии (замер v0.1 показал, что Python выигрывает именно стдлибой, а не синтаксисом), поэтому набор покрывает то, что покрывает стандартная библиотека Python.
+## Canonical format (`clad fmt`)
 
-## Канонический формат (`clad fmt`)
+- 2-space indentation; one space around binary operators; no space after `(` or before `)`.
+- The one-line `:` form is mandatory when the body is a single simple statement; block form when there are more or the body is compound (`if`/`for`/`while`).
+- `x = x + 1` canonicalizes to `x += 1`; `else if` chains to `elif`.
+- Exactly one blank line between functions. No trailing whitespace.
+- `clad fmt file` rewrites the file into canonical form (comments are preserved); `clad fmt --check file` verifies without writing and exits non-zero on deviations. The formatter is idempotent and never changes program semantics.
 
-- Отступ 2 пробела; один пробел вокруг бинарных операторов; без пробела после `(` и перед `)`.
-- Однострочная форма `:` обязательна, если тело — одна простая инструкция; блочная — если больше или тело составное (`if`/`for`/`while`).
-- `x = x + 1` канонизируется в `x += 1`; цепочки `else if` — в `elif`.
-- Пустая строка между функциями ровно одна. Trailing whitespace запрещён.
-- `clad fmt file` переписывает файл в каноническую форму (комментарии сохраняются); `clad fmt --check file` — проверка без записи, ненулевой код выхода при отклонениях. Форматтер идемпотентен, семантика программы не меняется.
-
-## Формат ошибок
+## Error format
 
 ```
 err E012 line 4 col 9
@@ -140,12 +139,12 @@ err E012 line 4 col 9
   fix: write target as a call, e.g. |> map(f)
 ```
 
-Код ошибки стабилен (для автопочинки моделью), `fix` — конкретное действие.
+Error codes are stable (for model self-repair); `fix` is a concrete action. Runtime errors carry the call chain (`in f (called at line N col M)`). The full code reference is in [docs/errors.md](docs/errors.md). Recursion is limited to 500 frames (E115).
 
-## Вне scope v0.1
+## Out of scope for v0.x
 
-Модули/импорты, классы, конкурентность, статическая типизация, компиляция. Сначала — рабочий интерпретатор и бенчмарк.
+Modules/imports, classes, concurrency, static typing, compilation.
 
-## Бенчмарк (главный артефакт)
+## Benchmark (the primary artifact)
 
-25 задач (алгоритмы + обработка данных). Для каждой: Claude генерирует решение на Clad и на Python, замеряем (1) число токенов решения, (2) число итераций до прохождения тестов. Цель v0.1: ≥15% экономии токенов при не худшем числе итераций.
+35 tasks (algorithms + data processing). For each, Claude generates a solution in Clad (given only this spec) and in Python; we measure (1) solution token count on the real Claude tokenizer and (2) iterations until the output matches and `clad fmt --check` passes. Current results: tokens −15.1% vs Python, 35/35 tasks solved. See `bench/`.

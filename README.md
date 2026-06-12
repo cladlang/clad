@@ -38,7 +38,7 @@ fn fib(n:int) -> int
 range(10) |> filter(x -> x % 2 == 0) |> map(x -> x * x) |> sum() |> say()
 ```
 
-Full language reference: [SPEC.en.md](SPEC.en.md) (English) / [SPEC.md](SPEC.md) (Russian). Error code reference: [docs/errors.md](docs/errors.md). Examples: [examples/](examples/).
+Full language reference: [SPEC.md](SPEC.md). Error code reference: [docs/errors.md](docs/errors.md). Examples: [examples/](examples/).
 
 ## Status
 

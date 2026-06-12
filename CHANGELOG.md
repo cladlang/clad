@@ -6,7 +6,7 @@ First published release: [npm](https://www.npmjs.com/package/clad-lang) · [GitH
 
 - Regression test suite (`npm test`), GitHub Actions CI.
 - Recursion depth limit (E115), call-chain tracebacks in errors, E999 for internal failures, optional `maxSteps` for embedding (E116).
-- English spec (SPEC.en.md), error-code reference (docs/errors.md), `clad --version`.
+- English spec (now the canonical SPEC.md), error-code reference (docs/errors.md), `clad --version`.
 - Web playground at [cladlang.github.io/clad](https://cladlang.github.io/clad/).
 
 ## 0.6.0 — 2026-06-12
