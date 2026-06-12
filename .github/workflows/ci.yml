@@ -1,0 +1,23 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm test
+      - name: clad fmt --check on all tracked .clad files
+        run: git ls-files '*.clad' | xargs node src/cli.js fmt --check
+      - name: examples still run
+        run: |
+          node src/cli.js run examples/fib.clad
+          node src/cli.js run examples/pipeline.clad
+          node src/cli.js run examples/words.clad

@@ -14,8 +14,12 @@ A token-minimal programming language designed for LLM code generation (Claude-fi
 ## Quick start
 
 ```
+git clone https://github.com/cladlang/clad && cd clad
 node src/cli.js run examples/fib.clad
+node src/cli.js fmt --check examples/fib.clad
 ```
+
+Or `npm install && npm link` to get the `clad` command. Requires Node ≥ 20. Run the test suite with `npm test`.
 
 ## Taste
 
@@ -28,15 +32,15 @@ fn fib(n:int) -> int
 range(10) |> filter(x -> x % 2 == 0) |> map(x -> x * x) |> sum() |> say()
 ```
 
-Full language reference: [SPEC.md](SPEC.md). Examples: [examples/](examples/).
+Full language reference: [SPEC.en.md](SPEC.en.md) (English) / [SPEC.md](SPEC.md) (Russian). Error code reference: [docs/errors.md](docs/errors.md). Examples: [examples/](examples/).
 
 ## Status
 
-v0.6 — working tree-walking interpreter and canonical formatter (`clad fmt`, with `--check`; comment-preserving, idempotent). Python-habit operators (`**`, `//`, `+=`, ternary `a if c else b`, `elif`, `break`/`continue`, negative indexing, deep `==`, `+` on lists), iterable strings, and a dense stdlib covering Python's (`freq`, `group`, `scan`, `runs`, `chunks`, `zip`, `maxby`, `uniq`, `flat`, `says`, `title`, …).
+v0.7 — release candidate: regression test suite (`npm test`), CI, recursion limits and call-chain tracebacks in errors, packaged CLI. Working tree-walking interpreter and canonical formatter (`clad fmt`, with `--check`; comment-preserving, idempotent). Python-habit operators (`**`, `//`, `+=`, ternary `a if c else b`, `elif`, `break`/`continue`, negative indexing, deep `==`, `+` on lists), iterable strings, and a dense stdlib covering Python's (`freq`, `group`, `scan`, `runs`, `chunks`, `zip`, `maxby`, `uniq`, `flat`, `says`, `title`, …).
 
 Benchmarks vs Python over 35 tasks, now including data-processing-heavy ones ([bench/results/](bench/results/)):
 
 - **Tokens: 1557 vs 1834 (−15.1%)** on the real Claude tokenizer; Clad cheaper or equal on 31/35 tasks.
 - **Iterations to green** (since v0.6 a Clad solution must also pass `clad fmt --check`): v0.4 run — 25/25 first-attempt on both claude-opus-4-8 and claude-fable-5; v0.6 run (35 tasks, fmt enforced) — **35/35 passed, 40 vs 35 attempts**, first-attempt output correct on 34/35, and every extra attempt (mostly formatter canonicalization) self-repaired in exactly one round.
 
-Next: error-message hardening, static checks for contracts.
+Next: static checks for contracts, more data-processing tasks.
