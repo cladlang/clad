@@ -6,7 +6,7 @@
 
 A token-minimal programming language designed for LLM code generation (Claude-first, works with any model).
 
-**Try it in your browser: [cladlang.github.io/clad](https://cladlang.github.io/clad/)** — the site runs the real interpreter.
+**Try it in your browser: [cladlang.github.io/clad](https://cladlang.github.io/clad/)** — the site runs the real interpreter. Updates: [x.com/cladlang](https://x.com/cladlang).
 
 > Clad is an independent community project, not affiliated with or endorsed by Anthropic.
 
